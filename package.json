@@ -10,8 +10,8 @@
 		"build": "node build/build.js"
 	},
 	"dependencies": {
-		"vue": "^2.4.2",
-		"vuedraggable": "^2.14.1"
+		"dragdroptouch": "https://github.com/Bernardo-Castilho/dragdroptouch.git",
+		"vue": "^2.4.2"
 	},
 	"devDependencies": {
 		"autoprefixer": "^7.1.2",
