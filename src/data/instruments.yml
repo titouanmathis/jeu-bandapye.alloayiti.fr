@@ -1,0 +1,81 @@
+- name: tom basse
+  id: 1
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: caisse claire
+  id: 2
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: köne
+  id: 3
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: bambou
+  id: 4
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: bas
+  id: 5
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: kwachi
+  id: 6
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: graj
+  id: 7
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: tchatcha
+  id: 8
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''
+- name: tambou
+  id: 9
+  classes: []
+  image:
+    src: http://placehold.it/300x300/eee/eee
+    width: 300
+    height: 300
+  audio:
+    src: ''

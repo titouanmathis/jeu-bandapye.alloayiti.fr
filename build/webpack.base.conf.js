@@ -38,6 +38,11 @@ module.exports = {
 				include: [resolve('src'), resolve('test')]
 			},
 			{
+				test: /\.ya?ml$/,
+				loader: 'json-loader!yaml-loader',
+				include: [resolve('src'), resolve('test')]
+			},
+			{
 				test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
 				loader: 'url-loader',
 				options: {
