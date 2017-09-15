@@ -10,7 +10,7 @@
 		"build": "node build/build.js"
 	},
 	"dependencies": {
-		"dragdroptouch": "https://github.com/Bernardo-Castilho/dragdroptouch.git",
+		"sm-events": "https://titouanmathis@bitbucket.org/studiometa/events.git",
 		"vue": "^2.4.2"
 	},
 	"devDependencies": {
