@@ -1,6 +1,6 @@
 {
 	"name": "jeu-bandapye.alloayiti.fr",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"description": "A small game for Allô Ayiti",
 	"author": "Titouan Mathis <titouan.mathis@gmail.com>",
 	"private": true,
@@ -10,7 +10,7 @@
 		"build": "node build/build.js"
 	},
 	"dependencies": {
-		"dragdroptouch": "https://github.com/Bernardo-Castilho/dragdroptouch.git",
+		"sm-events": "https://titouanmathis@bitbucket.org/studiometa/events.git",
 		"vue": "^2.4.2"
 	},
 	"devDependencies": {

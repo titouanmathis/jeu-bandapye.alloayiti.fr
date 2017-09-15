@@ -1496,10 +1496,6 @@ domutils@1.5.1:
     dom-serializer "0"
     domelementtype "1"
 
-"dragdroptouch@https://github.com/Bernardo-Castilho/dragdroptouch.git":
-  version "0.0.0"
-  resolved "https://github.com/Bernardo-Castilho/dragdroptouch.git#31b94f433de8b475ee3c2ce687ea7b10e751579f"
-
 duplexer@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
@@ -1810,6 +1806,10 @@ for-own@^1.0.0:
 foreach@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/foreach/-/foreach-2.0.5.tgz#0bee005018aeb260d0a3af3ae658dd0136ec1b99"
+
+"foreach@git+https://titouanmathis@bitbucket.org/studiometa/foreach.git":
+  version "1.0.0"
+  resolved "git+https://titouanmathis@bitbucket.org/studiometa/foreach.git#c9a53d761f86ef67db6ce0e25cf5b3a95d78dc0c"
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -2355,6 +2355,10 @@ is-utf8@^0.2.0:
 is-wsl@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/is-wsl/-/is-wsl-1.1.0.tgz#1f16e4aa22b04d1336b66188a66af3c600c3a66d"
+
+"is@git+https://titouanmathis@bitbucket.org/studiometa/is.git":
+  version "1.0.0"
+  resolved "git+https://titouanmathis@bitbucket.org/studiometa/is.git#8291e4c9fa91d661413ee480ae52f6e69a9f2f98"
 
 isarray@0.0.1:
   version "0.0.1"
@@ -3902,6 +3906,13 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
 slash@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
+
+"sm-events@https://titouanmathis@bitbucket.org/studiometa/events.git":
+  version "1.0.0"
+  resolved "https://titouanmathis@bitbucket.org/studiometa/events.git#96f03bb96d6b36607b340f8d91902fcd1f8de6a4"
+  dependencies:
+    foreach "git+https://titouanmathis@bitbucket.org/studiometa/foreach.git"
+    is "git+https://titouanmathis@bitbucket.org/studiometa/is.git"
 
 sntp@1.x.x:
   version "1.0.9"
