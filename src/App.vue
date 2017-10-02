@@ -5,10 +5,8 @@
 				<ul class="images">
 					<li class="images__item"
 						v-for="(image, index) in images"
-						@mouseenter="image.isOver = true"
-						@touchenter="image.isOver = true"
-						@mouseleave="image.isOver = false"
-						@touchleave="image.isOver = false"
+						@mouseenter="mouseenterHandler(image, $event)"
+						@mouseleave="mouseleaveHandler(image, $event)"
 						:class="getClasses(image)">
 							<span :data-index="index" class="images__name">{{ image.name }}</span>
 							<img class="images__img" :src="image.image.src" :width="image.image.width" :height="image.image.height" alt="?">
@@ -17,12 +15,13 @@
 			</div>
 			<div class="col">
 				<ul class="names">
-					<li class="names__item" v-for="(name, index) in names" :key="name.id">
-						<span class="names__btn names__btn--placeholder"
+					<li class="names__item" v-for="name in names" :key="name.id">
+						<button class="names__btn names__btn--placeholder"
+							:disabled="name.isSuccess"
 							@mousedown="mousedownHandler(name, $event)"
-							@touchstart.prevent="touchstartHandler(name, $event)" >
+							@touchstart.prevent="touchstartHandler(name, $event)">
 							{{ name.name }}
-						</span>
+						</button>
 						<button class="names__btn names__btn--ghost" :style="getStyle(name)">{{ name.name }}</button>
 					</li>
 				</ul>
@@ -41,7 +40,8 @@
 		data() {
 			const data = {
 				isDragging: false,
-				currentIndex: null,
+				draggedId: null,
+				over: null,
 				classes: {
 					error: 'is-error',
 					success: 'is-success',
@@ -58,13 +58,26 @@
 			const names = this.shuffle(instruments)
 			names.forEach((name) => {
 				name.position = {}
+				name.isSuccess = false
 			})
 			data.names = names
 
 			// Set images
-			data.images = this.shuffle(instruments)
+			const images = this.shuffle(instruments)
+			images.forEach((image) => {
+				image.isSuccess = false
+			})
+			data.images = images
 
 			return data
+		},
+		watch: {
+			draggedId(newValue) {
+				log('draggedId', newValue)
+			},
+			over(newValue) {
+				log('draggedId', newValue)
+			}
 		},
 		methods: {
 
@@ -78,6 +91,8 @@
 				const classes = [];
 				if (image.isOver && this.isDragging) {
 					classes.push(this.classes.over)
+				} else if (image.isSuccess) {
+					classes.push(this.classes.success)
 				}
 				return classes
 			},
@@ -135,8 +150,9 @@
 				on(document, 'touchmove', this.touchmoveHandler.bind(this))
 				once(document, 'touchend', (e) => {
 					off(document, 'touchmove', this.touchmoveHandler)
-					this.dragEnd(name)
-					this.images.forEach(image => image.isOver = false)
+					this.drop(name)
+					// this.dragEnd(name)
+					// this.images.forEach(image => image.isOver = false)
 				})
 
 				this.dragStart(name, event.target)
@@ -159,7 +175,8 @@
 				on(document, 'mousemove', this.mousemoveHandler.bind(this))
 				once(document, 'mouseup', (e) => {
 					off(document, 'mousemove', this.mousemoveHandler)
-					this.dragEnd(name)
+					this.drop(name)
+					// this.dragEnd(name)
 				})
 
 				this.dragStart(name, event.target)
@@ -176,6 +193,8 @@
 			dragStart(name, $el) {
 				log('dragStart', name.name)
 
+				this.draggedId = name.id
+
 				// Get sizes of current name
 				const sizes = $el.getBoundingClientRect();
 
@@ -191,6 +210,8 @@
 					yOrig: y,
 					top: sizes.top,
 					left: sizes.left,
+					width: sizes.width,
+					height: sizes.height,
 					marginTop: y * -1,
 					marginLeft: x * -1,
 				}
@@ -212,8 +233,43 @@
 			dragEnd(name) {
 				log('dragEnd', name.name)
 
+				this.draggedId = null
 				this.isDragging = false
 				name.isDragging = false
+			},
+
+
+
+			drop(name) {
+				log('drop', name.name)
+
+				if (this.over !== null && name.id === this.over.id) {
+					this.success(this.over, name)
+				} else {
+					this.error(this.over, name)
+				}
+
+				this.dragEnd(name)
+			},
+
+
+
+			success(image, name) {
+				log('success', name.name)
+				image.isSuccess = true
+				name.isSuccess = true
+
+				// Get target position
+				const $el = document.elementFromPoint(this.pointer.x, this.pointer.y)
+				const position = $el.getBoundingClientRect();
+				image.x = position.left + position.width * 0.5
+				image.y = position.top + position.height * 0.5
+			},
+
+
+
+			error(image, name) {
+				log('error', name.name)
 			},
 
 
@@ -227,7 +283,6 @@
 				const position = name.position
 
 				if (name.isDragging) {
-					// log('tick', 'isDragging', name.name)
 					// Get target position
 					const x = this.pointer.x - position.left
 					const y = this.pointer.y - position.top
@@ -235,25 +290,27 @@
 					position.x += (x - position.x) * 0.4
 					position.y += (y - position.y) * 0.4
 				} else if (name.isAnimating) {
-					// log('tick', 'isAnimating', name.name)
+					const x = this.over && this.over.id === name.id ? Math.round(position.left + (position.width * 0.5) + position.marginLeft - this.over.x) * -1 : position.xOrig
+					const y = this.over && this.over.id === name.id ? Math.round(position.top + (position.height * 0.5) + position.marginTop - this.over.y) * -1 : position.yOrig
+
 					// Update current position
-					position.x += (position.xOrig - position.x) * 0.4
-					position.y += (position.yOrig - position.y) * 0.4
+					position.x += (x - position.x) * 0.4
+					position.y += (y - position.y) * 0.4
 
 					// If current position is close to
 					// target position, set current position to
 					// target position (avoiding infinite round)
-					if (Math.abs(position.xOrig - position.x) < 0.1) {
-						position.x = position.xOrig
+					if (Math.abs(x - position.x) < 0.1) {
+						position.x = x
 					}
 
-					if (Math.abs(position.yOrig - position.y) < 0.1) {
-						position.y = position.yOrig
+					if (Math.abs(y - position.y) < 0.1) {
+						position.y = y
 					}
 
 					// If x and y position are same as origin,
 					// animation is finished, we do not need to tick again
-					if (position.x === position.xOrig && position.y === position.yOrig) {
+					if (position.x === x && position.y === y) {
 						name.isAnimating = false
 						return false
 					}
@@ -293,15 +350,31 @@
 					const index = $el.getAttribute('data-index')
 					this.images.forEach(image => image.isOver = false)
 					if (index !== null) {
+						this.over = this.images[index]
 						this.images[index].isOver = true
+					} else {
+						this.over = null
 					}
 				}
+			},
+
+
+			mouseenterHandler(image, event) {
+				this.over = image
+				image.isOver = true
+			},
+
+			mouseleaveHandler(image, event) {
+				this.over = null
+				image.isOver = false
 			}
 		}
 	}
 </script>
 
 <style lang="scss">
+	@import "./assets/scss/fontfaces";
+
 	*,
 	*::after,
 	*::before {
@@ -320,7 +393,7 @@
 
 	body {
 		padding: 1em;
-		font-family: sans-serif;
+		font-family: "Brandon", sans-serif;
 	}
 
 	.row {
@@ -355,13 +428,15 @@
 		flex: 1 0 33.33%;
 		padding: 1em;
 		border: 1px solid #eee;
+		background: #fff;
+		transition: background 0.2s ease-out;
 
 		&.is-over {
 			background: #eee;
 		}
 
 		&.is-success {
-			background: #0f0;
+			background: #0f0 !important;
 		}
 
 		&.is-error {
@@ -409,7 +484,7 @@
 		display: inline-block;
 		padding: 0.5em 1em;
 		font: inherit;
-		text-transform: capitalize;
+		text-transform: uppercase;
 		white-space: nowrap;
 		background: #eee;
 		border: 0;
@@ -423,6 +498,10 @@
 
 		&:focus {
 			outline: none;
+		}
+
+		&[disabled] {
+			pointer-events: none;
 		}
 	}
 
