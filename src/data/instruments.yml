@@ -14,7 +14,7 @@
     height: 300
   audio:
     src: ''
-- name: köne
+- name: kone
   id: 3
   image:
     src: http://placehold.it/300x300/eee/eee
