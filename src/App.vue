@@ -1,61 +1,54 @@
 <template>
 	<div class="app" :class="isDragging && classes.dragging">
-		<div class="row">
-			<div class="col">
-				<ul class="images">
-					<li class="images__item"
-						v-for="(image, index) in images"
-						@mouseenter="mouseenterHandler(image, $event)"
-						@mouseleave="mouseleaveHandler(image, $event)"
-						:class="getClasses(image)">
-							<span :data-index="index" class="images__name">{{ image.name }}</span>
-							<img class="images__img" :src="image.image.src" :width="image.image.width" :height="image.image.height" alt="?">
-					</li>
-				</ul>
-			</div>
-			<div class="col">
-				<ul class="names">
-					<li class="names__item" v-for="name in names" :key="name.id">
-						<button class="names__btn names__btn--placeholder"
-							:disabled="name.isSuccess"
-							@mousedown="mousedownHandler(name, $event)"
-							@touchstart.prevent="touchstartHandler(name, $event)">
-							{{ name.name }}
-						</button>
-						<button class="names__btn names__btn--ghost" :style="getStyle(name)">{{ name.name }}</button>
-					</li>
-				</ul>
-			</div>
-		</div>
+		<ul class="images">
+			<li class="images__item"
+				v-for="(image, index) in images"
+				:key="image.id"
+				@mouseenter="mouseenterHandler(image, $event)"
+				@mouseleave="mouseleaveHandler(image, $event)"
+				:class="getClasses(image)"
+				:style="`background-image: url(http://placehold.it/${image.image.width}x${image.image.height}/eee/eee)`">
+					<img class="images__img" :src="`http://placehold.it/${image.image.width}x${image.image.height}/eee/eee`" :width="image.image.width" :height="image.image.height" alt="?">
+			</li>
+		</ul>
+
+		<ul class="names">
+			<li class="names__item" v-for="name in names" :key="name.id">
+				<button class="names__btn names__btn--placeholder"
+					:disabled="name.isSuccess"
+					@mousedown.capture="dragStart(name, $event.target, $event.type)"
+					@touchstart.capture.passive="dragStart(name, $event.target, $event.type)">
+					{{ name.name }}
+				</button>
+				<button class="names__btn names__btn--ghost" :style="getStyle(name)">{{ name.name }}</button>
+			</li>
+		</ul>
 	</div>
 </template>
 
 <script>
-	import { on, off, once } from 'sm-events'
+	import { once } from 'sm-events'
+	import { log, shuffleArray } from './utils'
+	import { pointer } from './mixins'
 	import instruments from './data/instruments.yml'
 
-	const log = window.console.log.bind(window)
 	export default {
 		name: 'app',
+		mixins: [ pointer() ],
 		data() {
 			const data = {
 				isDragging: false,
-				draggedId: null,
-				over: null,
+				hovered: null,
 				classes: {
 					error: 'is-error',
 					success: 'is-success',
 					over: 'is-over',
 					dragging: 'is-dragging'
-				},
-				pointer: {
-					x: 0,
-					y: 0
 				}
 			}
 
 			// Set names
-			const names = this.shuffle(instruments)
+			const names = shuffleArray(instruments)
 			names.forEach((name) => {
 				name.position = {}
 				name.isSuccess = false
@@ -63,7 +56,7 @@
 			data.names = names
 
 			// Set images
-			const images = this.shuffle(instruments)
+			const images = shuffleArray(instruments)
 			images.forEach((image) => {
 				image.isSuccess = false
 			})
@@ -71,13 +64,8 @@
 
 			return data
 		},
-		watch: {
-			draggedId(newValue) {
-				log('draggedId', newValue)
-			},
-			over(newValue) {
-				log('draggedId', newValue)
-			}
+		created() {
+			log('app created')
 		},
 		methods: {
 
@@ -96,18 +84,6 @@
 				}
 				return classes
 			},
-
-
-			/**
-			 * Return a shuffled copy of an array
-			 *
-			 * @param  {Array} array The array to shuffle
-			 * @return {Array}     The shuffled array
-			 */
-			shuffle(array) {
-				return array.slice().sort(() => 0.5 - Math.random())
-			},
-
 
 
 			/**
@@ -133,67 +109,18 @@
 			},
 
 
-
-			/**
-			 * Handler for the `touchstart` event on a name
-			 *
-			 * @param  {Object} name  The target name
-			 * @param  {Object} event The event's object
-			 */
-			touchstartHandler(name, event) {
-				log('touchstartHandler', name.name)
-
-				const touch = event.touches[0]
-				this.pointer.x = touch.clientX
-				this.pointer.y = touch.clientY
-
-				on(document, 'touchmove', this.touchmoveHandler.bind(this))
-				once(document, 'touchend', (e) => {
-					off(document, 'touchmove', this.touchmoveHandler)
-					this.drop(name)
-					// this.dragEnd(name)
-					// this.images.forEach(image => image.isOver = false)
-				})
-
-				this.dragStart(name, event.target)
-			},
-
-
-
-			/**
-			 * Handler for the `mousedown` event on a name
-			 *
-			 * @param  {Object} name  The target name
-			 * @param  {Object} event The event's object
-			 */
-			mousedownHandler(name, event) {
-				log('mousedownHandler', name.name)
-
-				this.pointer.x = event.clientX
-				this.pointer.y = event.clientY
-
-				on(document, 'mousemove', this.mousemoveHandler.bind(this))
-				once(document, 'mouseup', (e) => {
-					off(document, 'mousemove', this.mousemoveHandler)
-					this.drop(name)
-					// this.dragEnd(name)
-				})
-
-				this.dragStart(name, event.target)
-			},
-
-
-
 			/**
 			 * Setup and start the drag animation
 			 *
 			 * @param  {Object}      name The name being dragged
 			 * @param  {HTMLElement} $el  The DOM element
 			 */
-			dragStart(name, $el) {
-				log('dragStart', name.name)
+			dragStart(name, $el, eventType) {
+				log('dragStart', name.name, eventType)
 
-				this.draggedId = name.id
+				// Bind drop on release
+				const event = eventType === 'mousedown' ? 'mouseup' : 'touchend'
+				once(document, event, (e) => this.drop(name))
 
 				// Get sizes of current name
 				const sizes = $el.getBoundingClientRect();
@@ -216,10 +143,9 @@
 					marginLeft: x * -1,
 				}
 
-				this.isDragging = true
 				name.isDragging = true
 				name.isAnimating = true
-
+				this.isDragging = true
 				this.tick(name);
 			},
 
@@ -232,8 +158,6 @@
 			 */
 			dragEnd(name) {
 				log('dragEnd', name.name)
-
-				this.draggedId = null
 				this.isDragging = false
 				name.isDragging = false
 			},
@@ -243,10 +167,10 @@
 			drop(name) {
 				log('drop', name.name)
 
-				if (this.over !== null && name.id === this.over.id) {
-					this.success(this.over, name)
+				if (this.hovered !== null && name.id === this.hovered.id) {
+					this.success(this.hovered, name)
 				} else {
-					this.error(this.over, name)
+					this.error(this.hovered, name)
 				}
 
 				this.dragEnd(name)
@@ -281,57 +205,48 @@
 			 */
 			tick(name) {
 				const position = name.position
+				let x = position.xOrig
+				let y = position.yOrig
 
+				// Get target position from pointer
+				// if currently dragging
 				if (name.isDragging) {
-					// Get target position
-					const x = this.pointer.x - position.left
-					const y = this.pointer.y - position.top
-					// Update current position
-					position.x += (x - position.x) * 0.4
-					position.y += (y - position.y) * 0.4
-				} else if (name.isAnimating) {
-					const x = this.over && this.over.id === name.id ? Math.round(position.left + (position.width * 0.5) + position.marginLeft - this.over.x) * -1 : position.xOrig
-					const y = this.over && this.over.id === name.id ? Math.round(position.top + (position.height * 0.5) + position.marginTop - this.over.y) * -1 : position.yOrig
+					x = this.pointer.x - position.left
+					y = this.pointer.y - position.top
+				}
 
-					// Update current position
-					position.x += (x - position.x) * 0.4
-					position.y += (y - position.y) * 0.4
+				// Get position from target if success
+				// and name has been released
+				if (!name.isDragging && name.isSuccess) {
+					x = Math.round(position.left + (position.width * 0.5) + position.marginLeft - this.hovered.x) * -1
+					y = Math.round(position.top + (position.height * 0.5) + position.marginTop - this.hovered.y) * -1
+				}
 
-					// If current position is close to
-					// target position, set current position to
-					// target position (avoiding infinite round)
-					if (Math.abs(x - position.x) < 0.1) {
-						position.x = x
-					}
+				// Update current position
+				position.x += (x - position.x) * 0.4
+				position.y += (y - position.y) * 0.4
 
-					if (Math.abs(y - position.y) < 0.1) {
-						position.y = y
-					}
+				// If current position is close to
+				// target position, set current position to
+				// target position (avoiding infinite round)
+				if (Math.abs(x - position.x) < 0.1) {
+					position.x = x
+				}
 
-					// If x and y position are same as origin,
-					// animation is finished, we do not need to tick again
-					if (position.x === x && position.y === y) {
-						name.isAnimating = false
-						return false
-					}
+				if (Math.abs(y - position.y) < 0.1) {
+					position.y = y
+				}
+
+				// If x and y position are same as origin,
+				// animation is finished, we do not need to tick again
+				if (!name.isDragging && position.x === x && position.y === y) {
+					name.isAnimating = false
+					return false
 				}
 
 				// Tick agains
 				requestAnimationFrame(this.tick.bind(this, name))
 			},
-
-
-
-			/**
-			 * Update pointer position on mouse move
-			 *
-			 * @param  {Object} event The event's object
-			 */
-			mousemoveHandler(event) {
-				this.pointer.x = event.clientX
-				this.pointer.y = event.clientY
-			},
-
 
 
 			/**
@@ -341,31 +256,41 @@
 			 */
 			touchmoveHandler(event) {
 				const touch = event.touches[0]
-				this.pointer.x = touch.clientX
-				this.pointer.y = touch.clientY
-
 				// Enable rollover on images
 				const $el = document.elementFromPoint(touch.clientX, touch.clientY)
 				if ($el !== null) {
 					const index = $el.getAttribute('data-index')
 					this.images.forEach(image => image.isOver = false)
 					if (index !== null) {
-						this.over = this.images[index]
+						this.hovered = this.images[index]
 						this.images[index].isOver = true
 					} else {
-						this.over = null
+						this.hovered = null
 					}
 				}
 			},
 
 
+			/**
+			 * Handler for the `mouseenter` event on an image
+			 *
+			 * @param  {Object} image The image being overed
+			 * @param  {Object} event The event's object
+			 */
 			mouseenterHandler(image, event) {
-				this.over = image
+				this.hovered = image
 				image.isOver = true
 			},
 
+
+			/**
+			 * Handler for the `mouseleave` event on an image
+			 *
+			 * @param  {Object} image The image being overed
+			 * @param  {Object} event The event's object
+			 */
 			mouseleaveHandler(image, event) {
-				this.over = null
+				this.hovered = null
 				image.isOver = false
 			}
 		}
@@ -387,24 +312,28 @@
 		height: 100%;
 		margin: 0;
 		padding: 0;
+		overflow: hidden;
 		-webkit-font-smoothing: antialiased;
 		user-select: none;
 	}
 
 	body {
-		padding: 1em;
+		position: absolute;
+		top: 0;
+		left: 0;
 		font-family: "Brandon", sans-serif;
 	}
 
-	.row {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-start;
+	.is-dragging {
+		cursor: grabbing;
 	}
 
 
-	.is-dragging {
-		cursor: grabbing;
+	.app {
+		display: flex;
+		align-items: stretch;
+		width: 100%;
+		height: 100%;
 	}
 
 
@@ -414,55 +343,46 @@
 
 	.images {
 		display: flex;
-		max-width: 600px;
+		flex-direction: column;
 		flex-wrap: wrap;
+		width: 100%;
+		height: 100%;
 		margin: 0;
-		padding-left: 0;
+		padding: 1em;
 		list-style: none;
-		border: 1px solid #eee;
 	}
 
 	.images__item {
 		position: relative;
 		display: block;
 		flex: 1 0 33.33%;
+		width: 33.33%;
+		height: 33.33%;
 		padding: 1em;
-		border: 1px solid #eee;
 		background: #fff;
-		transition: background 0.2s ease-out;
+		transition: background-color 0.2s ease-out;
+		background-position: 50% 50%;
+		background-repeat: no-repeat;
+		background-size: contain;
 
 		&.is-over {
-			background: #eee;
+			background-color: #eee;
 		}
 
 		&.is-success {
-			background: #0f0 !important;
+			background-color: #0f0 !important;
 		}
 
 		&.is-error {
-			background: #f00;
+			background-color: #f00;
 		}
 	}
 
 	.images__img {
-		display: block;
+		display: none;
 		width: 100%;
 		height: auto;
 	}
-
-
-	.images__name {
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-		text-transform: capitalize;
-	}
-
 
 
 	/*------------------------------------*\
@@ -477,6 +397,8 @@
 
 	.names__item {
 		position: relative;
+		float: right;
+		clear: right;
 		margin: 0.25em 0.5em 0.75em;
 	}
 
